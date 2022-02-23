@@ -11,7 +11,7 @@ Anthony Nguyen
 #include <sys/shm.h>
 #include <signal.h>
 #include <sys/stat.h>
-#include <fstream> //for writing to file
+#include <fstream> 
 #include <cstdlib>
 
 using namespace std;
@@ -19,11 +19,11 @@ using namespace std;
 enum state { idle, want_in, in_cs };
 
 
-char* getFormattedTime(); //gets local time
-void terminateSigHandler(int); //handles signal from parent to terminate on Ctrl+C
-void timeoutSigHandler(int); //handles signla from parent to terminate on timeout
+char* getFormattedTime(); // local time
+void terminateSigHandler(int); 
+void timeoutSigHandler(int); 
 
-int id; //process id, used by multiple functions
+int id; 
 
 int main(int argc, char ** argv){
 
@@ -31,7 +31,7 @@ int main(int argc, char ** argv){
 	signal(SIGTERM, terminateSigHandler);
 	signal(SIGUSR1, timeoutSigHandler);
 
-	if(argc < 2){ //If no arguments were supplied, id must not be set
+	if(argc < 2){ //Perror when no argument supplied
 		perror("No argument supplied for id");
 		exit(1);
 	}
@@ -39,11 +39,11 @@ int main(int argc, char ** argv){
 		id = atoi(argv[1]);
 	}
 
-	srand(time(0)); //generate different delays each run
+	srand(time(0)); //time delays each run
 
-	int N; //number of slave processes master will spawn
+	int N; //number of slave processes 
 
-	//Shared memory key, id, and data store used to share number of slaves to spawn
+	
 	 int slaveKey = ftok("Makefile", 5);
 	 int slaveSegmentID;
 	 int *slaveNum;
@@ -57,7 +57,7 @@ int main(int argc, char ** argv){
 	 	N = *slaveNum;
 	 }
 	
-	//Shared memory key, id, and data store used for sharedNum to be incremented
+	
 	int sharedIntKey = ftok("Makefile", 1);
 	int sharedIntSegmentID;
 	int *sharedInt;
@@ -70,8 +70,8 @@ int main(int argc, char ** argv){
 		sharedInt = (int *) shmat(sharedIntSegmentID, NULL, 0);
 	}
 
-	//Shared memory key, id, and data store used for flags array in Peterson's algorithm
-	int flagsKey = ftok("Makefile", 2); //
+	
+	int flagsKey = ftok("Makefile", 2); 
 	int flagsSegmentID;
 	int *flags;
 
@@ -83,7 +83,7 @@ int main(int argc, char ** argv){
 	 	flags = (int *)shmat(flagsSegmentID, NULL, 0);
 	 }
 
-	 ///Shared memory key, id, and data store used for turn variable in Peterson's algorithm
+	 
 	 int turnKey = ftok("Makefile", 3);
 	 int turnSegmentID;
 	 int *turn;
@@ -97,7 +97,7 @@ int main(int argc, char ** argv){
 	 }
 
 
-	 //Shared memory key, id, and data store used to share output file name from master to slaves
+	 
 	int fileNameKey = ftok("Makefile", 6);
 	int fileNameSegmentID;
 	char *fileName;
@@ -114,7 +114,7 @@ int main(int argc, char ** argv){
 	 }
 	 
 
-	//Shared memory key, id, and data store used to share number of times slave should enter crit. sec.
+	
 	int maxWritesKey = ftok("Makefile", 7);
 	int maxWritesSegmentID;
 	int *maxWrites;
@@ -134,7 +134,7 @@ int main(int argc, char ** argv){
 	int j;
 	for (int i = 0; i < *maxWrites; i++ ){
 		
-		//execute code to enter critical section;
+		
 		do{
 			flags[id - 1] = want_in;
 			j = *turn;
@@ -145,7 +145,7 @@ int main(int argc, char ** argv){
 
 				flags[id - 1] = in_cs;
 
-				//check that no-one else is in critical section
+				
 				for(j = 0; j < N; j++){
 					if((j != id - 1) && (flags[j] == in_cs)){
 						break;
@@ -159,19 +159,19 @@ int main(int argc, char ** argv){
 
 		cerr << getFormattedTime() << ": Process " << id << " in critical section\n";
 
-		//sleep for random amount of time (between 0 and 2 seconds);
+		//sleep for random amount of time
 		sleep(rand() % 3);
 
-		//increment sharedNum
+		
 		++(*sharedInt);
 
-		//write message into the file
+		//write to the file
 		file << "File modified by process number " << id << " at time " << getFormattedTime() << " with sharedNum = " << (*sharedInt) << endl;
 		
-		//sleep for random amount of time (between 0 and 2 seconds);
+		//sleep for random amount of time 
 		sleep(rand() % 3);
 
-		//exit from critical section;
+		
 
 
 		cerr << getFormattedTime() << ": Process " << id << " exiting critical section\n";
